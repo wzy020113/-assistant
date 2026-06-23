@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>死亡搁浅2 · 主机质检</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;500&display=swap');
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #141720;
+      --surface2: #1c2030;
+      --border: rgba(255, 255, 255, 0.08);
+      --border2: rgba(255, 255, 255, 0.14);
+      --accent: #e8a020;
+      --accent-dim: rgba(232, 160, 32, 0.12);
+      --accent-text: #f5c060;
+      --green: #2ec98e;
+      --green-dim: rgba(46, 201, 142, 0.12);
+      --text: #e8eaf0;
+      --text2: #7a8299;
+      --text3: #4a5168;
+      --mono: 'Share Tech Mono', monospace;
+      --sans: 'Noto Sans SC', system-ui, sans-serif;
+      --r: 6px;
+      --r2: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 100px;
+      position: relative;
+    }
+
+    .hdr {
+      padding: 16px 16px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .hdr-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .3; }
+    }
+
+    .hdr-title {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: .5px;
+    }
+
+    .hdr-sub {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .date-chip {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border: 0.5px solid var(--border2);
+      border-radius: var(--r);
+      padding: 8px 12px;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--accent-text);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .date-chip input[type=date] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      padding: 16px 16px 0;
+    }
+
+    .stat {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--r2);
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .stat-n {
+      font-family: var(--mono);
+      font-size: 26px;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-n.hi {
+      color: var(--green);
+    }
+
+    .stat-l {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin: 16px 16px 0;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--r2);
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .tab {
+      padding: 9px 0;
+      font-size: 13px;
+      font-family: var(--sans);
+      font-weight: 400;
+      color: var(--text2);
+      background: none;
+      border: none;
+      border-radius: calc(var(--r2) - 2px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all .2s;
+      letter-spacing: .3px;
+    }
+
+    .tab.active {
+      background: var(--surface2);
+      color: var(--text);
+      border: 0.5px solid var(--border2);
+    }
+
+    .tab i {
+      font-size: 15px;
+    }
+
+    .panel {
+      display: none;
+      padding: 12px 16px 20px;
+      flex: 1;
+    }
+
+    .panel.on {
+      display: block;
+    }
+
+    .host-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .host-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--r2);
+      overflow: hidden;
+      transition: border-color .15s;
+    }
+
+    .host-card.checked {
+      border-color: rgba(46, 201, 142, 0.35);
+    }
+
+    .host-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .host-id {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text2);
+      width: 44px;
+      flex-shrink: 0;
+    }
+
+    .host-card.checked .host-id {
+      color: var(--green);
+    }
+
+    .toggle-track {
+      width: 44px;
+      height: 26px;
+      border-radius: 13px;
+      flex-shrink: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      position: relative;
+      transition: background .2s, border-color .2s;
+    }
+
+    .host-card.checked .toggle-track {
+      background: rgba(46, 201, 142, 0.2);
+      border-color: var(--green);
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--text3);
+      transition: transform .2s, background .2s;
+    }
+
+    .host-card.checked .toggle-knob {
+      transform: translateX(18px);
+      background: var(--green);
+    }
+
+    .toggle-label {
+      font-size: 12px;
+      color: var(--text3);
+      flex: 1;
+      transition: color .15s;
+    }
+
+    .host-card.checked .toggle-label {
+      color: var(--green);
+    }
+
+    .host-bottom {
+      padding: 0 14px 11px;
+    }
+
+    .remark-in {
+      width: 100%;
+      background: var(--surface2);
+      border: 0.5px solid var(--border);
+      border-radius: var(--r);
+      padding: 7px 10px;
+      font-size: 12px;
+      color: var(--text);
+      font-family: var(--sans);
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .remark-in::placeholder {
+      color: var(--text3);
+    }
+
+    .remark-in:focus {
+      border-color: var(--border2);
+    }
+
+    .save-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px 20px;
+      background: linear-gradient(to top, var(--bg) 70%, transparent);
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .save-btn {
+      flex: 1;
+      padding: 13px;
+      background: var(--accent);
+      color: #0d0f14;
+      border: none;
+      border-radius: var(--r2);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: var(--sans);
+      letter-spacing: .5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity .15s;
+    }
+
+    .save-btn:active {
+      opacity: .8;
+    }
+
+    .save-btn:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+    }
+
+    .save-btn i {
+      font-size: 16px;
+    }
+
+    .export-btn {
+      padding: 13px 16px;
+      background: var(--surface2);
+      color: var(--accent-text);
+      border: 0.5px solid var(--border2);
+      border-radius: var(--r2);
+      font-size: 14px;
+      cursor: pointer;
+      transition: opacity .15s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .export-btn:active {
+      opacity: .8;
+    }
+
+    .hist-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      margin-top: 16px;
+    }
+
+    .hist-sel {
+      flex: 1;
+      background: var(--surface);
+      border: 0.5px solid var(--border2);
+      color: var(--text);
+      border-radius: var(--r);
+      padding: 9px 12px;
+      font-size: 13px;
+      font-family: var(--sans);
+      outline: none;
+    }
+
+    .hist-meta {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 4px;
+      letter-spacing: .3px;
+    }
+
+    .pill.green {
+      background: var(--green-dim);
+      color: var(--green);
+    }
+
+    .pill.amber {
+      background: var(--accent-dim);
+      color: var(--accent-text);
+    }
+
+    .h-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--r2);
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .h-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .h-row:last-child {
+      border-bottom: none;
+    }
+
+    .h-id {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text2);
+      width: 44px;
+      flex-shrink: 0;
+    }
+
+    .h-row.passed .h-id {
+      color: var(--green);
+    }
+
+    .h-status {
+      flex-shrink: 0;
+    }
+
+    .pass-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: var(--green-dim);
+      color: var(--green);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-family: var(--mono);
+      letter-spacing: .3px;
+    }
+
+    .fail-dash {
+      color: var(--text3);
+      font-size: 13px;
+    }
+
+    .h-rem {
+      font-size: 12px;
+      color: var(--text2);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 0;
+      color: var(--text3);
+      font-size: 13px;
+    }
+
+    .empty-state i {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 10px;
+      color: var(--text3);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--green);
+      color: #0d0f14;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px 20px;
+      border-radius: var(--r2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+      white-space: nowrap;
+      z-index: 99;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--text3);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 0.5px;
+      background: var(--border);
+    }
+
+    .add-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 0.5px dashed var(--border2);
+      border-radius: var(--r2);
+      padding: 10px 14px;
+      margin-top: 6px;
+    }
+
+    .add-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      min-width: 0;
+    }
+
+    .add-input::placeholder {
+      color: var(--text3);
+      font-family: var(--mono);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .add-confirm {
+      background: var(--accent-dim);
+      border: 0.5px solid rgba(232, 160, 32, 0.3);
+      color: var(--accent-text);
+      border-radius: var(--r);
+      padding: 5px 12px;
+      font-size: 12px;
+      font-family: var(--sans);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background .15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .add-confirm:active {
+      background: rgba(232, 160, 32, 0.25);
+    }
+
+    .add-confirm i {
+      font-size: 13px;
+    }
+
+    .del-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text3);
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      transition: color .15s;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    .del-btn:hover {
+      color: #e24b4a;
+    }
+
+    .del-btn i {
+      font-size: 15px;
+      pointer-events: none;
+    }
+
+    .import-area {
+      padding: 8px 16px 0;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .import-btn {
+      background: var(--surface2);
+      border: 0.5px solid var(--border2);
+      color: var(--text);
+      border-radius: var(--r);
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--sans);
+      transition: opacity .15s;
+    }
+
+    .import-btn:active {
+      opacity: .8;
+    }
+
+    .file-status {
+      font-size: 11px;
+      color: var(--text3);
+      margin-left: auto;
+    }
+  </style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <span class="eyebrow">死亡搁浅 2 · QC SYSTEM</span>
+    <div class="hdr-title">主机质检记录</div>
+    <div class="hdr-sub" id="hdr-sub">共 20 台主机 · 数据自动保存</div>
+  </div>
+  <div class="date-chip" onclick="document.getElementById('dpick').focus()">
+    <i class="ti ti-calendar" style="font-size:14px"></i>
+    <span id="d-disp">—</span>
+    <input type="date" id="dpick" onchange="onDateChange()">
+  </div>
+</div>
+
+<div class="import-area">
+  <button class="import-btn" onclick="document.getElementById('jsonFileInput').click()">
+    <i class="ti ti-file-import" style="font-size:14px"></i> 加载备份
+  </button>
+  <button class="import-btn" onclick="exportJsonFile()">
+    <i class="ti ti-file-export" style="font-size:14px"></i> 导出备份
+  </button>
+  <span class="file-status" id="file-status">本地存储已激活</span>
+  <input type="file" id="jsonFileInput" accept=".json" style="display:none" onchange="handleFileSelect(event)">
+</div>
+
+<div class="stats" id="stats-bar">
+  <div class="stat">
+    <div class="stat-n" id="s-total">20</div>
+    <div class="stat-l">主机总数</div>
+  </div>
+  <div class="stat">
+    <div class="stat-n hi" id="s-pass">0</div>
+    <div class="stat-l">已通过</div>
+  </div>
+  <div class="stat">
+    <div class="stat-n" id="s-pct">0%</div>
+    <div class="stat-l">通过率</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-u" onclick="switchTab('u')">
+    <i class="ti ti-pencil"></i>今日更新
+  </button>
+  <button class="tab" id="tab-h" onclick="switchTab('h')">
+    <i class="ti ti-clock-hour-4"></i>历史记录
+  </button>
+</div>
+
+<div class="panel on" id="panel-u">
+  <div class="section-label" style="margin-top:8px">通道状态</div>
+  <div class="host-grid" id="host-grid"></div>
+  <div class="add-row">
+    <i class="ti ti-plus" style="font-size:15px;color:var(--text3);flex-shrink:0"></i>
+    <input class="add-input" id="add-input" placeholder="输入主机编号，如 GZ021" maxlength="20"
+           onkeydown="if(event.key==='Enter')addHost()">
+    <button class="add-confirm" onclick="addHost()">
+      <i class="ti ti-check"></i>添加
+    </button>
+  </div>
+</div>
+
+<div class="panel" id="panel-h">
+  <div class="hist-top">
+    <select class="hist-sel" id="hist-sel" onchange="loadHist()">
+      <option value="">— 选择历史日期 —</option>
+    </select>
+  </div>
+  <div id="hist-meta" class="hist-meta" style="display:none"></div>
+  <div id="hist-body">
+    <div class="empty-state">
+      <i class="ti ti-archive"></i>选择日期查看历史记录
+    </div>
+  </div>
+</div>
+
+<div class="save-bar" id="save-bar">
+  <button class="save-btn" id="save-btn" onclick="saveTodayRecord()">
+    <i class="ti ti-device-floppy"></i>保存今日记录
+  </button>
+  <button class="export-btn" onclick="autoExportJson()">
+    <i class="ti ti-download"></i> 自动缓存
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  (function() {
+    // ----- 存储键名 -----
+    const STORAGE_HOSTS_KEY = 'ds2_qc_hosts';
+    const STORAGE_RECORDS_KEY = 'ds2_qc_records';
+
+    // 默认20台主机
+    const DEFAULT_HOSTS = Array.from({ length: 20 }, (_, i) => 'GZ' + String(i + 1).padStart(3, '0'));
+
+    // ----- 全局状态 -----
+    let HOSTS = [...DEFAULT_HOSTS];                // 当前主机列表
+    let records = {};                              // 所有历史记录 { "2026-06-23": { hosts: {...}, hostOrder: [...] } }
+    let todayStatus = {};                          // 今日临时状态 { "GZ001": { checked: true, remark: "..." } }
+    let currentDate = '';                          // YYYY-MM-DD
+
+    // ----- 本地存储操作 (持久化核心) -----
+    function saveHostsToStorage() {
+      try {
+        localStorage.setItem(STORAGE_HOSTS_KEY, JSON.stringify(HOSTS));
+      } catch (e) {
+        console.warn('保存主机列表失败', e);
+      }
+    }
+
+    function loadHostsFromStorage() {
+      try {
+        const stored = localStorage.getItem(STORAGE_HOSTS_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            HOSTS = parsed;
+          } else {
+            HOSTS = [...DEFAULT_HOSTS];
+          }
+        } else {
+          HOSTS = [...DEFAULT_HOSTS];
+        }
+      } catch (e) {
+        HOSTS = [...DEFAULT_HOSTS];
+      }
+    }
+
+    function saveRecordsToStorage() {
+      try {
+        localStorage.setItem(STORAGE_RECORDS_KEY, JSON.stringify(records));
+        document.getElementById('file-status').textContent = '数据已自动保存';
+      } catch (e) {
+        toast('存储空间不足，请导出备份');
+      }
+    }
+
+    function loadRecordsFromStorage() {
+      try {
+        const stored = localStorage.getItem(STORAGE_RECORDS_KEY);
+        if (stored) {
+          records = JSON.parse(stored);
+        } else {
+          records = {};
+        }
+      } catch (e) {
+        records = {};
+      }
+    }
+
+    // 完全初始化数据
+    function initializeData() {
+      loadHostsFromStorage();
+      loadRecordsFromStorage();
+      // 设置当前日期
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      currentDate = `${yyyy}-${mm}-${dd}`;
+      
+      document.getElementById('dpick').value = currentDate;
+      updateDateDisplay();
+      
+      // 载入今日状态 (如果之前保存过则恢复，否则为空)
+      if (records[currentDate] && records[currentDate].hosts) {
+        todayStatus = JSON.parse(JSON.stringify(records[currentDate].hosts));
+      } else {
+        todayStatus = {};
+      }
+      
+      buildHostGrid();
+      updateStats();
+      updateHistorySelect();
+      document.getElementById('hdr-sub').textContent = `共 ${HOSTS.length} 台主机 · 数据自动保存`;
+    }
+
+    // ----- UI 工具函数 -----
+    function updateDateDisplay() {
+      if (!currentDate) return;
+      const [y, m, d] = currentDate.split('-');
+      document.getElementById('d-disp').textContent = `${m}/${d}`;
+    }
+
+    function onDateChange() {
+      const picker = document.getElementById('dpick');
+      if (!picker.value) return;
+      currentDate = picker.value;
+      updateDateDisplay();
+      
+      // 切换到新日期时，加载该日期的记录或清空
+      if (records[currentDate] && records[currentDate].hosts) {
+        todayStatus = JSON.parse(JSON.stringify(records[currentDate].hosts));
+      } else {
+        todayStatus = {};
+      }
+      buildHostGrid();
+      updateStats();
+    }
+
+    function safeId(host) {
+      return host.replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    function buildHostGrid() {
+      const grid = document.getElementById('host-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      
+      HOSTS.forEach(host => {
+        const status = todayStatus[host] || {};
+        const checked = !!status.checked;
+        const remark = status.remark || '';
+        const sid = safeId(host);
+        
+        const card = document.createElement('div');
+        card.className = 'host-card' + (checked ? ' checked' : '');
+        card.id = 'card-' + sid;
+        
+        card.innerHTML = `
+          <div class="host-top" onclick="window.toggleHost('${host}','${sid}')">
+            <span class="host-id">${host}</span>
+            <div class="toggle-track"><div class="toggle-knob"></div></div>
+            <span class="toggle-label">${checked ? '通道已通过' : '待检测'}</span>
+            <i class="ti ${checked ? 'ti-check' : 'ti-minus'}" style="font-size:15px;color:${checked ? 'var(--green)' : 'var(--text3)'};flex-shrink:0"></i>
+            <button class="del-btn" onclick="window.deleteHost(event,'${host}')" aria-label="删除 ${host}">
+              <i class="ti ti-trash"></i>
+            </button>
+          </div>
+          <div class="host-bottom">
+            <input class="remark-in" id="rm-${sid}" placeholder="质检备注（选填）" value="${remark.replace(/"/g, '&quot;')}" oninput="window.updateRemark('${host}','${sid}')">
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function updateStats() {
+      const total = HOSTS.length;
+      const passed = HOSTS.filter(h => todayStatus[h] && todayStatus[h].checked).length;
+      document.getElementById('s-total').textContent = total;
+      document.getElementById('s-pass').textContent = passed;
+      const pct = total > 0 ? Math.round(passed / total * 100) : 0;
+      document.getElementById('s-pct').textContent = pct + '%';
+    }
+
+    // ----- 主机操作 (挂载到window供onclick调用) -----
+    window.toggleHost = function(host, sid) {
+      if (!todayStatus[host]) todayStatus[host] = { checked: false, remark: '' };
+      todayStatus[host].checked = !todayStatus[host].checked;
+      
+      const card = document.getElementById('card-' + sid);
+      if (card) {
+        const checked = todayStatus[host].checked;
+        card.classList.toggle('checked', checked);
+        const label = card.querySelector('.toggle-label');
+        if (label) label.textContent = checked ? '通道已通过' : '待检测';
+        const icon = card.querySelector('i.ti');
+        if (icon) {
+          icon.className = 'ti ' + (checked ? 'ti-check' : 'ti-minus');
+          icon.style.color = checked ? 'var(--green)' : 'var(--text3)';
+        }
+      }
+      updateStats();
+      // 自动暂存到records并持久化，确保刷新不丢失
+      autoSaveCurrentToRecords();
+    };
+
+    window.updateRemark = function(host, sid) {
+      const input = document.getElementById('rm-' + sid);
+      if (!input) return;
+      if (!todayStatus[host]) todayStatus[host] = { checked: false, remark: '' };
+      todayStatus[host].remark = input.value;
+      autoSaveCurrentToRecords();
+    };
+
+    window.deleteHost = function(event, host) {
+      event.stopPropagation();
+      const index = HOSTS.indexOf(host);
+      if (index === -1) return;
+      HOSTS.splice(index, 1);
+      delete todayStatus[host];
+      
+      saveHostsToStorage();
+      // 同时从当前日期记录中移除
+      if (records[currentDate] && records[currentDate].hosts) {
+        delete records[currentDate].hosts[host];
+        records[currentDate].hostOrder = records[currentDate].hostOrder.filter(h => h !== host);
+        saveRecordsToStorage();
+      }
+      
+      buildHostGrid();
+      updateStats();
+      document.getElementById('hdr-sub').textContent = `共 ${HOSTS.length} 台主机 · 数据自动保存`;
+      toast(`已移除 ${host}`);
+    };
+
+    function addHost() {
+      const input = document.getElementById('add-input');
+      const val = input.value.trim().toUpperCase();
+      if (!val) {
+        input.focus();
+        return;
+      }
+      if (HOSTS.includes(val)) {
+        toast('该编号已存在');
+        input.select();
+        return;
+      }
+      HOSTS.push(val);
+      saveHostsToStorage();
+      
+      // 同时更新当前日期记录中的hostOrder
+      if (!records[currentDate]) {
+        records[currentDate] = { hosts: {}, hostOrder: [] };
+      }
+      if (!records[currentDate].hostOrder.includes(val)) {
+        records[currentDate].hostOrder.push(val);
+      }
+      saveRecordsToStorage();
+      
+      input.value = '';
+      buildHostGrid();
+      updateStats();
+      document.getElementById('hdr-sub').textContent = `共 ${HOSTS.length} 台主机 · 数据自动保存`;
+      toast(`已添加 ${val}`);
+      
+      setTimeout(() => {
+        const card = document.getElementById('card-' + safeId(val));
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+    window.addHost = addHost;
+
+    // 自动将今日状态保存到records并持久化
+    function autoSaveCurrentToRecords() {
+      if (!currentDate) return;
+      if (!records[currentDate]) {
+        records[currentDate] = { hosts: {}, hostOrder: [...HOSTS] };
+      }
+      // 深拷贝今日状态
+      records[currentDate].hosts = JSON.parse(JSON.stringify(todayStatus));
+      records[currentDate].hostOrder = [...HOSTS];
+      saveRecordsToStorage();
+    }
+
+    function saveTodayRecord() {
+      if (!currentDate) {
+        toast('请先选择日期');
+        return;
+      }
+      const btn = document.getElementById('save-btn');
+      btn.disabled = true;
+      
+      if (!records[currentDate]) {
+        records[currentDate] = { hosts: {}, hostOrder: [] };
+      }
+      records[currentDate].hosts = JSON.parse(JSON.stringify(todayStatus));
+      records[currentDate].hostOrder = [...HOSTS];
+      
+      saveRecordsToStorage();
+      updateHistorySelect();
+      btn.disabled = false;
+      toast('记录已保存');
+    }
+    window.saveTodayRecord = saveTodayRecord;
+
+    // ----- 历史记录 -----
+    function updateHistorySelect() {
+      const sel = document.getElementById('hist-sel');
+      if (!sel) return;
+      const prevValue = sel.value;
+      const dates = Object.keys(records).sort((a, b) => b.localeCompare(a));
+      sel.innerHTML = '<option value="">— 选择历史日期 —</option>';
+      dates.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        const [y, m, dd] = d.split('-');
+        opt.textContent = `${y}年${m}月${dd}日`;
+        sel.appendChild(opt);
+      });
+      if (prevValue && records[prevValue]) {
+        sel.value = prevValue;
+      }
+    }
+
+    function loadHist() {
+      const sel = document.getElementById('hist-sel');
+      const date = sel.value;
+      const body = document.getElementById('hist-body');
+      const meta = document.getElementById('hist-meta');
+      
+      if (!date || !records[date]) {
+        body.innerHTML = '<div class="empty-state"><i class="ti ti-archive"></i>选择日期查看历史记录</div>';
+        meta.style.display = 'none';
+        return;
+      }
+      
+      const rec = records[date];
+      const hostList = rec.hostOrder || Object.keys(rec.hosts);
+      const hostsDetail = rec.hosts || {};
+      const passedCount = hostList.filter(h => hostsDetail[h] && hostsDetail[h].checked).length;
+      
+      meta.style.display = 'flex';
+      meta.innerHTML = `<span class="pill amber">死亡搁浅2</span><span class="pill green">通过 ${passedCount} / ${hostList.length} · ${hostList.length>0 ? Math.round(passedCount/hostList.length*100):0}%</span>`;
+      
+      const card = document.createElement('div');
+      card.className = 'h-card';
+      card.innerHTML = hostList.map(h => {
+        const detail = hostsDetail[h] || {};
+        const passed = !!detail.checked;
+        return `<div class="h-row${passed ? ' passed' : ''}">
+          <span class="h-id">${h}</span>
+          <span class="h-status">${passed ? '<span class="pass-badge"><i class="ti ti-check" style="font-size:10px"></i> 通过</span>' : '<span class="fail-dash">—</span>'}</span>
+          ${detail.remark ? `<span class="h-rem">${detail.remark}</span>` : ''}
+        </div>`;
+      }).join('');
+      
+      body.innerHTML = '';
+      body.appendChild(card);
+    }
+    window.loadHist = loadHist;
+
+    function switchTab(tab) {
+      document.getElementById('tab-u').classList.toggle('active', tab === 'u');
+      document.getElementById('tab-h').classList.toggle('active', tab === 'h');
+      document.getElementById('panel-u').classList.toggle('on', tab === 'u');
+      document.getElementById('panel-h').classList.toggle('on', tab === 'h');
+      document.getElementById('save-bar').style.display = tab === 'u' ? 'flex' : 'none';
+      if (tab === 'h') {
+        loadHist();
+      }
+    }
+    window.switchTab = switchTab;
+
+    // ----- JSON 导入导出 (备份功能) -----
+    function exportJsonFile() {
+      const data = {
+        version: '3.0',
+        lastModified: new Date().toISOString(),
+        hosts: HOSTS,
+        records: records
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ds2_qc_backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('备份文件已导出');
+    }
+    window.exportJsonFile = exportJsonFile;
+
+    function autoExportJson() {
+      exportJsonFile();
+    }
+    window.autoExportJson = autoExportJson;
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.hosts && Array.isArray(data.hosts)) {
+            HOSTS = data.hosts;
+            saveHostsToStorage();
+          }
+          if (data.records && typeof data.records === 'object') {
+            records = data.records;
+            saveRecordsToStorage();
+          }
+          // 重新加载当前日期状态
+          if (records[currentDate] && records[currentDate].hosts) {
+            todayStatus = JSON.parse(JSON.stringify(records[currentDate].hosts));
+          } else {
+            todayStatus = {};
+          }
+          buildHostGrid();
+          updateStats();
+          updateHistorySelect();
+          document.getElementById('hdr-sub').textContent = `共 ${HOSTS.length} 台主机 · 数据已恢复`;
+          toast('备份恢复成功');
+        } catch (err) {
+          toast('JSON格式错误');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+    window.handleFileSelect = handleFileSelect;
+
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2400);
+    }
+    window.toast = toast;
+
+    // 页面启动
+    initializeData();
+  })();
+</script>
+</body>
+</html>
