@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>死亡搁浅2 · 主机质检 (云存储)</title>
+  <title>死亡搁浅2 · 主机质检</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
   <style>
-    /* ... 所有CSS样式保持不变 ... */
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;500&display=swap');
 
     :root {
@@ -41,7 +40,7 @@
       padding-bottom: 120px;
     }
 
-    .config-bar {
+    .status-bar {
       background: #1a1a2e;
       border-bottom: 1px solid var(--border2);
       padding: 8px 12px;
@@ -50,15 +49,10 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
     }
-    .config-bar .status-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--text3);
-    }
-    .config-bar .status-dot.online { background: var(--green); }
-    .config-bar .status-dot.offline { background: #e24b4a; }
-    .config-bar .status-dot.syncing { background: var(--accent); animation: pulse 0.8s ease-in-out infinite; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); }
+    .dot.online { background: var(--green); }
+    .dot.offline { background: #e24b4a; }
 
     .hdr {
       padding: 16px 16px 0;
@@ -184,39 +178,23 @@
       background: linear-gradient(to top, var(--bg) 70%, transparent);
       display: flex; gap: 8px; z-index: 10;
     }
-    .save-btn {
-      flex: 1; padding: 13px;
-      background: var(--accent); color: #0d0f14;
-      border: none; border-radius: var(--r2);
+    .btn {
+      padding: 13px 16px; border: none; border-radius: var(--r2);
       font-size: 14px; font-weight: 500; font-family: var(--sans);
-      letter-spacing: .5px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: opacity .15s;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: 8px; transition: opacity .15s;
     }
-    .save-btn:active { opacity: .8; }
-    .save-btn:disabled { opacity: .35; cursor: not-allowed; }
-    .save-btn i { font-size: 16px; }
-    
-    .sync-btn {
-      padding: 13px 16px;
-      background: var(--surface2); color: var(--accent-text);
-      border: 0.5px solid var(--border2); border-radius: var(--r2);
-      font-size: 14px; cursor: pointer; transition: opacity .15s;
-      white-space: nowrap; display: flex; align-items: center; gap: 6px;
-    }
-    .sync-btn:active { opacity: .8; }
+    .btn:active { opacity: .8; }
+    .btn-primary { flex: 1; background: var(--accent); color: #0d0f14; }
+    .btn-secondary { background: var(--surface2); color: var(--accent-text); border: 0.5px solid var(--border2); white-space: nowrap; }
 
-    .hist-top {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 14px; margin-top: 16px;
-    }
+    .hist-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; margin-top: 16px; }
     .hist-sel {
       flex: 1; background: var(--surface); border: 0.5px solid var(--border2);
       color: var(--text); border-radius: var(--r); padding: 9px 12px;
       font-size: 13px; font-family: var(--sans); outline: none;
     }
-    .hist-meta {
-      display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
-    }
+    .hist-meta { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
     .pill {
       font-family: var(--mono); font-size: 11px; padding: 3px 9px;
       border-radius: 4px; letter-spacing: .3px;
@@ -235,27 +213,24 @@
     .h-row:last-child { border-bottom: none; }
     .h-id { font-family: var(--mono); font-size: 13px; color: var(--text2); width: 44px; flex-shrink: 0; }
     .h-row.passed .h-id { color: var(--green); }
-    .h-status { flex-shrink: 0; }
     .pass-badge {
       display: inline-flex; align-items: center; gap: 3px;
       background: var(--green-dim); color: var(--green);
       font-size: 11px; padding: 2px 8px; border-radius: 3px;
-      font-family: var(--mono); letter-spacing: .3px;
+      font-family: var(--mono);
     }
-    .fail-dash { color: var(--text3); font-size: 13px; }
-    .h-rem { font-size: 12px; color: var(--text2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fail-dash { color: var(--text3); }
+    .h-rem { font-size: 12px; color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .empty-state {
-      text-align: center; padding: 3rem 0; color: var(--text3); font-size: 13px;
-    }
-    .empty-state i { font-size: 32px; display: block; margin-bottom: 10px; color: var(--text3); }
+    .empty-state { text-align: center; padding: 3rem 0; color: var(--text3); }
+    .empty-state i { font-size: 32px; display: block; margin-bottom: 10px; }
 
     .toast {
       position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
       background: var(--green); color: #0d0f14;
       font-size: 13px; font-weight: 500; padding: 9px 20px;
       border-radius: var(--r2); opacity: 0; pointer-events: none;
-      transition: opacity .3s; white-space: nowrap; z-index: 99;
+      transition: opacity .3s; z-index: 99;
     }
     .toast.show { opacity: 1; }
 
@@ -264,9 +239,7 @@
       color: var(--text3); text-transform: uppercase; margin-bottom: 10px;
       display: flex; align-items: center; gap: 8px;
     }
-    .section-label::after {
-      content: ''; flex: 1; height: 0.5px; background: var(--border);
-    }
+    .section-label::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
 
     .add-row {
       display: flex; align-items: center; gap: 8px;
@@ -276,34 +249,69 @@
     .add-input {
       flex: 1; background: transparent; border: none; outline: none;
       font-family: var(--mono); font-size: 13px; color: var(--text);
-      text-transform: uppercase; letter-spacing: .5px; min-width: 0;
+      text-transform: uppercase; letter-spacing: .5px;
     }
-    .add-input::placeholder { color: var(--text3); font-family: var(--mono); text-transform: none; letter-spacing: 0; }
+    .add-input::placeholder { color: var(--text3); text-transform: none; letter-spacing: 0; }
     .add-confirm {
       background: var(--accent-dim); border: 0.5px solid rgba(232,160,32,0.3);
       color: var(--accent-text); border-radius: var(--r);
-      padding: 5px 12px; font-size: 12px; font-family: var(--sans);
-      cursor: pointer; display: flex; align-items: center; gap: 5px;
-      transition: background .15s; white-space: nowrap; flex-shrink: 0;
+      padding: 5px 12px; font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
     }
-    .add-confirm:active { background: rgba(232,160,32,0.25); }
-    .add-confirm i { font-size: 13px; }
 
     .del-btn {
       background: none; border: none; cursor: pointer;
-      color: var(--text3); padding: 4px; border-radius: 4px;
-      display: flex; align-items: center; transition: color .15s;
-      flex-shrink: 0; margin-left: auto;
+      color: var(--text3); padding: 4px; margin-left: auto;
     }
     .del-btn:hover { color: #e24b4a; }
-    .del-btn i { font-size: 15px; pointer-events: none; }
+    .del-btn i { font-size: 15px; }
+
+    /* 弹窗样式 */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.9); z-index: 999;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: var(--surface); border: 0.5px solid var(--border2);
+      border-radius: var(--r2); padding: 24px;
+      width: 100%; max-width: 400px;
+    }
+    .modal-box h3 {
+      font-family: var(--mono); color: var(--accent-text);
+      margin-bottom: 8px; font-size: 16px;
+    }
+    .modal-box p {
+      font-size: 12px; color: var(--text2); margin-bottom: 16px;
+    }
+    .modal-box input {
+      width: 100%; padding: 12px;
+      background: var(--surface2); border: 0.5px solid var(--border2);
+      border-radius: var(--r); color: var(--text);
+      font-family: var(--mono); font-size: 13px;
+      margin-bottom: 12px; outline: none;
+    }
+    .modal-box input:focus { border-color: var(--accent); }
+    .modal-btns { display: flex; gap: 8px; }
+    .modal-btns button {
+      padding: 12px; border: none; border-radius: var(--r);
+      font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+    .modal-btns .btn-confirm {
+      flex: 1; background: var(--accent); color: #0d0f14;
+    }
+    .modal-btns .btn-cancel {
+      padding: 12px 20px; background: var(--surface2);
+      color: var(--text2); border: 0.5px solid var(--border2);
+    }
   </style>
 </head>
 <body>
 
-<div class="config-bar" id="config-bar">
-  <span class="status-dot" id="sync-dot"></span>
-  <span id="sync-status">初始化中...</span>
+<div class="status-bar">
+  <span class="dot" id="sync-dot"></span>
+  <span id="sync-status" style="font-size:11px;">未连接</span>
   <span style="margin-left:auto;font-size:10px;" id="sync-time"></span>
 </div>
 
@@ -311,7 +319,7 @@
   <div class="hdr-left">
     <span class="eyebrow">死亡搁浅 2 · QC SYSTEM</span>
     <div class="hdr-title">主机质检记录</div>
-    <div class="hdr-sub" id="hdr-sub">共 20 台主机 · 云端同步</div>
+    <div class="hdr-sub" id="hdr-sub">共 20 台主机</div>
   </div>
   <div class="date-chip" onclick="document.getElementById('dpick').focus()">
     <i class="ti ti-calendar" style="font-size:14px"></i>
@@ -320,19 +328,10 @@
   </div>
 </div>
 
-<div class="stats" id="stats-bar">
-  <div class="stat">
-    <div class="stat-n" id="s-total">20</div>
-    <div class="stat-l">主机总数</div>
-  </div>
-  <div class="stat">
-    <div class="stat-n hi" id="s-pass">0</div>
-    <div class="stat-l">已通过</div>
-  </div>
-  <div class="stat">
-    <div class="stat-n" id="s-pct">0%</div>
-    <div class="stat-l">通过率</div>
-  </div>
+<div class="stats">
+  <div class="stat"><div class="stat-n" id="s-total">20</div><div class="stat-l">主机总数</div></div>
+  <div class="stat"><div class="stat-n hi" id="s-pass">0</div><div class="stat-l">已通过</div></div>
+  <div class="stat"><div class="stat-n" id="s-pct">0%</div><div class="stat-l">通过率</div></div>
 </div>
 
 <div class="tabs">
@@ -364,41 +363,90 @@
     </select>
   </div>
   <div id="hist-meta" class="hist-meta" style="display:none"></div>
-  <div id="hist-body">
-    <div class="empty-state">
-      <i class="ti ti-archive"></i>选择日期查看历史记录
-    </div>
-  </div>
+  <div id="hist-body"><div class="empty-state"><i class="ti ti-archive"></i>选择日期查看历史记录</div></div>
 </div>
 
-<div class="save-bar" id="save-bar">
-  <button class="save-btn" id="save-btn" onclick="saveAndSync()">
-    <i class="ti ti-cloud-up"></i>保存并同步
+<div class="save-bar">
+  <button class="btn btn-primary" onclick="saveAndSync()">
+    <i class="ti ti-cloud-up"></i>保存
   </button>
-  <button class="sync-btn" onclick="forceSync()">
-    <i class="ti ti-refresh"></i> 强制同步
+  <button class="btn btn-secondary" onclick="showTokenInput()">
+    <i class="ti ti-key"></i> 导入Token
   </button>
+</div>
+
+<!-- Token输入弹窗 -->
+<div class="modal-overlay" id="tokenModal">
+  <div class="modal-box">
+    <h3>🔑 导入Token</h3>
+    <p>粘贴你的GitHub Token（以ghp_开头）<br>Token会保存在浏览器中</p>
+    <input id="tokenInput" type="password" placeholder="ghp_xxxxxxxxxxxx">
+    <div class="modal-btns">
+      <button class="btn-confirm" onclick="saveManualToken()">确认</button>
+      <button class="btn-cancel" onclick="hideTokenInput()">取消</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ==================== 配置区域 ====================
-const GITHUB_TOKEN = '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';
 const GIST_ID = '7f5932c27738dfa4d93bee403bc32d09';
-// =================================================
-
 const API_URL = `https://api.github.com/gists/${GIST_ID}`;
 const DEFAULT_HOSTS = Array.from({length:20},(_,i)=>'GZ'+String(i+1).padStart(3,'0'));
 
+let GITHUB_TOKEN = '';
 let HOSTS = [...DEFAULT_HOSTS];
 let records = {};
 let todayStatus = {};
 let currentDate = '';
-let isSaving = false;
 
-// ==================== GitHub API 操作 ====================
+// ==================== Token 管理 ====================
+function getToken() {
+  return localStorage.getItem('ds2_github_token') || '';
+}
+
+function saveToken(token) {
+  localStorage.setItem('ds2_github_token', token);
+  GITHUB_TOKEN = token;
+  updateSyncStatus('online');
+  document.getElementById('sync-time').textContent = new Date().toLocaleTimeString();
+  hideTokenInput();
+  toast('✅ Token已保存！正在同步...');
+  initApp();
+}
+
+function showTokenInput() {
+  document.getElementById('tokenModal').classList.add('show');
+  document.getElementById('tokenInput').value = '';
+  setTimeout(() => document.getElementById('tokenInput').focus(), 100);
+}
+
+function hideTokenInput() {
+  document.getElementById('tokenModal').classList.remove('show');
+}
+
+function saveManualToken() {
+  const input = document.getElementById('tokenInput');
+  const token = input.value.trim();
+
+  if (!token) {
+    toast('请输入Token');
+    return;
+  }
+
+  if (!token.startsWith('ghp_')) {
+    toast('❌ Token应以ghp_开头');
+    return;
+  }
+
+  saveToken(token);
+}
+
+// ==================== API 操作 ====================
 async function fetchFromGist() {
+  if (!GITHUB_TOKEN) return false;
+
   try {
     updateSyncStatus('syncing');
     const response = await fetch(API_URL, {
@@ -407,57 +455,46 @@ async function fetchFromGist() {
         'Accept': 'application/vnd.github.v3+json'
       }
     });
-    
+
     if (!response.ok) throw new Error('获取失败');
-    
+
     const gist = await response.json();
     const file = gist.files['ds2_qc_data.json'];
-    
-    if (!file || !file.content) {
-      await createDefaultGistFile();
-      return;
+
+    if (file && file.content) {
+      const data = JSON.parse(file.content);
+      if (data.hosts) HOSTS = data.hosts;
+      if (data.records) records = data.records;
+
+      if (records[currentDate] && records[currentDate].hosts) {
+        todayStatus = JSON.parse(JSON.stringify(records[currentDate].hosts));
+      } else {
+        todayStatus = {};
+      }
     }
-    
-    const data = JSON.parse(file.content);
-    
-    if (data.hosts && Array.isArray(data.hosts)) {
-      HOSTS = data.hosts;
-    }
-    if (data.records && typeof data.records === 'object') {
-      records = data.records;
-    }
-    
-    if (records[currentDate] && records[currentDate].hosts) {
-      todayStatus = JSON.parse(JSON.stringify(records[currentDate].hosts));
-    } else {
-      todayStatus = {};
-    }
-    
+
     updateSyncStatus('online');
-    buildHostGrid();
-    updateStats();
-    updateHistorySelect();
-    console.log('✅ 数据已从云端加载');
+    document.getElementById('sync-time').textContent = new Date().toLocaleTimeString();
     return true;
   } catch (error) {
-    console.error('同步失败:', error);
+    console.error('加载失败:', error);
     updateSyncStatus('offline');
-    loadFromLocalStorage();
     return false;
   }
 }
 
 async function uploadToGist(data) {
-  if (isSaving) return;
-  isSaving = true;
-  
+  if (!GITHUB_TOKEN) {
+    toast('❌ 请先导入Token');
+    return false;
+  }
+
   try {
     updateSyncStatus('syncing');
     const response = await fetch(API_URL, {
       method: 'PATCH',
       headers: {
         'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -468,90 +505,50 @@ async function uploadToGist(data) {
         }
       })
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('上传失败详情:', errorData);
-      throw new Error('上传失败: ' + response.status);
-    }
-    
+
+    if (!response.ok) throw new Error('上传失败');
+
     updateSyncStatus('online');
-    saveToLocalStorage(data);
     document.getElementById('sync-time').textContent = new Date().toLocaleTimeString();
-    console.log('✅ 数据已保存到云端');
     return true;
   } catch (error) {
     console.error('上传失败:', error);
     updateSyncStatus('offline');
-    saveToLocalStorage(data);
     return false;
-  } finally {
-    isSaving = false;
   }
 }
 
-async function createDefaultGistFile() {
-  const defaultData = {
+function getCurrentData() {
+  if (!records[currentDate]) {
+    records[currentDate] = { hosts: {}, hostOrder: [] };
+  }
+  records[currentDate].hosts = JSON.parse(JSON.stringify(todayStatus));
+  records[currentDate].hostOrder = [...HOSTS];
+
+  return {
     hosts: HOSTS,
     records: records,
-    version: '3.0'
+    version: '3.0',
+    lastModified: new Date().toISOString()
   };
-  
-  try {
-    await uploadToGist(defaultData);
-    console.log('已创建云端数据文件');
-  } catch (error) {
-    console.error('创建默认文件失败:', error);
+}
+
+async function immediateSave() {
+  if (!GITHUB_TOKEN) return;
+  const data = getCurrentData();
+  const success = await uploadToGist(data);
+  if (success) {
+    toast('✅ 已保存');
+  } else {
+    toast('❌ 保存失败');
   }
 }
 
-// ==================== 本地存储备份 ====================
-function saveToLocalStorage(data) {
-  try {
-    localStorage.setItem('ds2_qc_hosts', JSON.stringify(data.hosts));
-    localStorage.setItem('ds2_qc_records', JSON.stringify(data.records));
-  } catch (e) {
-    console.warn('本地存储失败:', e);
-  }
-}
-
-function loadFromLocalStorage() {
-  try {
-    const hostsStr = localStorage.getItem('ds2_qc_hosts');
-    const recordsStr = localStorage.getItem('ds2_qc_records');
-    
-    if (hostsStr) {
-      const parsed = JSON.parse(hostsStr);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        HOSTS = parsed;
-      }
-    }
-    if (recordsStr) {
-      records = JSON.parse(recordsStr);
-    }
-    
-    if (records[currentDate] && records[currentDate].hosts) {
-      todayStatus = JSON.parse(JSON.stringify(records[currentDate].hosts));
-    } else {
-      todayStatus = {};
-    }
-    
-    buildHostGrid();
-    updateStats();
-    updateHistorySelect();
-    console.log('📱 已加载本地缓存');
-  } catch (e) {
-    console.warn('本地加载失败:', e);
-  }
-}
-
-// ==================== 同步状态更新 ====================
 function updateSyncStatus(status) {
   const dot = document.getElementById('sync-dot');
   const text = document.getElementById('sync-status');
-  
-  dot.className = 'status-dot';
-  
+  dot.className = 'dot';
+
   switch(status) {
     case 'online':
       dot.classList.add('online');
@@ -562,32 +559,10 @@ function updateSyncStatus(status) {
       text.textContent = '离线模式';
       break;
     case 'syncing':
-      dot.classList.add('syncing');
+      dot.classList.add('online');
       text.textContent = '同步中...';
       break;
   }
-}
-
-// ==================== 获取当前完整数据 ====================
-function getCurrentData() {
-  if (!records[currentDate]) {
-    records[currentDate] = { hosts: {}, hostOrder: [] };
-  }
-  records[currentDate].hosts = JSON.parse(JSON.stringify(todayStatus));
-  records[currentDate].hostOrder = [...HOSTS];
-  
-  return {
-    hosts: HOSTS,
-    records: records,
-    version: '3.0',
-    lastModified: new Date().toISOString()
-  };
-}
-
-// ==================== 立即保存函数 ====================
-async function immediateSave() {
-  const data = getCurrentData();
-  await uploadToGist(data);
 }
 
 // ==================== UI 函数 ====================
@@ -596,14 +571,14 @@ function safeId(h) { return h.replace(/[^a-zA-Z0-9_-]/g,'_'); }
 function buildHostGrid() {
   const grid = document.getElementById('host-grid');
   if (!grid) return;
-  
+
   grid.innerHTML = '';
   HOSTS.forEach(host => {
     const d = todayStatus[host] || {};
     const on = !!d.checked;
     const rem = d.remark || '';
     const sid = safeId(host);
-    
+
     const card = document.createElement('div');
     card.className = 'host-card' + (on ? ' checked' : '');
     card.id = 'card-' + sid;
@@ -612,8 +587,8 @@ function buildHostGrid() {
         <span class="host-id">${host}</span>
         <div class="toggle-track"><div class="toggle-knob"></div></div>
         <span class="toggle-label">${on ? '通道已通过' : '待检测'}</span>
-        <i class="ti ${on ? 'ti-check' : 'ti-minus'}" style="font-size:15px;color:${on ? 'var(--green)' : 'var(--text3)'};flex-shrink:0"></i>
-        <button class="del-btn" onclick="deleteHost(event,'${host}')" aria-label="删除 ${host}">
+        <i class="ti ${on ? 'ti-check' : 'ti-minus'}" style="font-size:15px;color:${on ? 'var(--green)' : 'var(--text3)'}"></i>
+        <button class="del-btn" onclick="deleteHost(event,'${host}')">
           <i class="ti ti-trash"></i>
         </button>
       </div>
@@ -622,8 +597,8 @@ function buildHostGrid() {
       </div>`;
     grid.appendChild(card);
   });
-  
-  document.getElementById('hdr-sub').textContent = `共 ${HOSTS.length} 台主机 · 云端同步`;
+
+  document.getElementById('hdr-sub').textContent = `共 ${HOSTS.length} 台主机`;
 }
 
 function updateStats() {
@@ -637,7 +612,7 @@ function updateStats() {
 async function toggleHost(host, sid) {
   if(!todayStatus[host]) todayStatus[host] = { checked: false, remark: '' };
   todayStatus[host].checked = !todayStatus[host].checked;
-  
+
   const card = document.getElementById('card-' + sid);
   if (card) {
     const on = todayStatus[host].checked;
@@ -647,17 +622,14 @@ async function toggleHost(host, sid) {
     ico.className = 'ti ' + (on ? 'ti-check' : 'ti-minus');
     ico.style.color = on ? 'var(--green)' : 'var(--text3)';
   }
-  
+
   updateStats();
-  // 立即保存到云端
   await immediateSave();
-  toast('✅ 已保存到云端');
 }
 
 async function updateRemark(host, sid) {
   if(!todayStatus[host]) todayStatus[host] = { checked: false, remark: '' };
   todayStatus[host].remark = document.getElementById('rm-'+sid).value;
-  // 立即保存到云端
   await immediateSave();
 }
 
@@ -665,56 +637,42 @@ async function deleteHost(event, host) {
   event.stopPropagation();
   const idx = HOSTS.indexOf(host);
   if(idx === -1) return;
-  
   HOSTS.splice(idx, 1);
   delete todayStatus[host];
-  
   buildHostGrid();
   updateStats();
   await immediateSave();
-  toast(`已移除 ${host} ✅`);
 }
 
 async function addHost() {
   const inp = document.getElementById('add-input');
   const val = inp.value.trim().toUpperCase();
   if(!val) { inp.focus(); return; }
-  if(HOSTS.includes(val)) { toast('该编号已存在'); inp.select(); return; }
-  
+  if(HOSTS.includes(val)) { toast('已存在'); return; }
   HOSTS.push(val);
   inp.value = '';
   buildHostGrid();
   updateStats();
-  
   await immediateSave();
-  toast(`已添加 ${val} ✅`);
-  
-  setTimeout(() => {
-    const card = document.getElementById('card-' + safeId(val));
-    if(card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 100);
 }
 
 function onDateChange() {
   currentDate = document.getElementById('dpick').value;
   const [y,m,d] = currentDate.split('-');
   document.getElementById('d-disp').textContent = `${m}/${d}`;
-  
+
   if (records[currentDate] && records[currentDate].hosts) {
     todayStatus = JSON.parse(JSON.stringify(records[currentDate].hosts));
   } else {
     todayStatus = {};
   }
-  
   buildHostGrid();
   updateStats();
 }
 
 function updateHistorySelect() {
   const sel = document.getElementById('hist-sel');
-  const prev = sel.value;
   const dates = Object.keys(records).sort((a,b) => b.localeCompare(a));
-  
   sel.innerHTML = '<option value="">— 选择历史日期 —</option>';
   dates.forEach(d => {
     const o = document.createElement('option');
@@ -723,40 +681,37 @@ function updateHistorySelect() {
     o.textContent = `${y}年${m}月${dd}日`;
     sel.appendChild(o);
   });
-  
-  if(prev && records[prev]) sel.value = prev;
 }
 
 function loadHist() {
   const d = document.getElementById('hist-sel').value;
   const body = document.getElementById('hist-body');
   const meta = document.getElementById('hist-meta');
-  
+
   if(!d || !records[d]) {
     body.innerHTML = '<div class="empty-state"><i class="ti ti-archive"></i>选择日期查看历史记录</div>';
     meta.style.display = 'none';
     return;
   }
-  
+
   const rec = records[d];
   const hostList = rec.hostOrder || Object.keys(rec.hosts);
   const passed = hostList.filter(h => rec.hosts[h] && rec.hosts[h].checked).length;
-  
+
   meta.style.display = 'flex';
-  meta.innerHTML = `<span class="pill amber">死亡搁浅2</span><span class="pill green">通过 ${passed} / ${hostList.length} · ${hostList.length>0?Math.round(passed/hostList.length*100):0}%</span>`;
-  
+  meta.innerHTML = `<span class="pill amber">死亡搁浅2</span><span class="pill green">通过 ${passed}/${hostList.length}</span>`;
+
   const card = document.createElement('div');
   card.className = 'h-card';
   card.innerHTML = hostList.map(h => {
     const hd = rec.hosts[h] || {};
-    const passed = !!hd.checked;
-    return `<div class="h-row${passed ? ' passed' : ''}">
+    return `<div class="h-row${hd.checked ? ' passed' : ''}">
       <span class="h-id">${h}</span>
-      <span class="h-status">${passed ? '<span class="pass-badge"><i class="ti ti-check" style="font-size:10px"></i> 通过</span>' : '<span class="fail-dash">—</span>'}</span>
+      <span>${hd.checked ? '<span class="pass-badge"><i class="ti ti-check"></i> 通过</span>' : '<span class="fail-dash">—</span>'}</span>
       ${hd.remark ? `<span class="h-rem">${hd.remark}</span>` : ''}
     </div>`;
   }).join('');
-  
+
   body.innerHTML = '';
   body.appendChild(card);
 }
@@ -766,71 +721,74 @@ function switchTab(t) {
   document.getElementById('tab-h').classList.toggle('active', t==='h');
   document.getElementById('panel-u').classList.toggle('on', t==='u');
   document.getElementById('panel-h').classList.toggle('on', t==='h');
-  document.getElementById('save-bar').style.display = t==='u' ? 'flex' : 'none';
   if(t==='h') loadHist();
 }
 
 async function saveAndSync() {
-  if (!currentDate) {
-    toast('请先选择日期');
-    return;
-  }
-  
-  const btn = document.getElementById('save-btn');
-  btn.disabled = true;
-  
-  if (!records[currentDate]) {
-    records[currentDate] = { hosts: {}, hostOrder: [] };
-  }
+  if (!currentDate) { toast('请选择日期'); return; }
+  if (!GITHUB_TOKEN) { toast('请先导入Token'); return; }
+
+  if (!records[currentDate]) records[currentDate] = { hosts: {}, hostOrder: [] };
   records[currentDate].hosts = JSON.parse(JSON.stringify(todayStatus));
   records[currentDate].hostOrder = [...HOSTS];
-  
   await immediateSave();
   updateHistorySelect();
-  btn.disabled = false;
-}
-
-async function forceSync() {
-  await fetchFromGist();
-  toast('✅ 已从云端同步');
 }
 
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 3000);
+  setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-// 暴露函数到全局作用域
+// 暴露函数
 window.toggleHost = toggleHost;
 window.updateRemark = updateRemark;
 window.deleteHost = deleteHost;
 window.addHost = addHost;
 window.switchTab = switchTab;
 window.saveAndSync = saveAndSync;
-window.forceSync = forceSync;
+window.showTokenInput = showTokenInput;
+window.hideTokenInput = hideTokenInput;
+window.saveManualToken = saveManualToken;
 
 // ==================== 初始化 ====================
-async function init() {
+async function initApp() {
   const now = new Date();
   currentDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   document.getElementById('dpick').value = currentDate;
   const [y,m,d] = currentDate.split('-');
   document.getElementById('d-disp').textContent = `${m}/${d}`;
-  
-  const online = await fetchFromGist();
-  
-  if (!online) {
-    loadFromLocalStorage();
+
+  if (GITHUB_TOKEN) {
+    const online = await fetchFromGist();
+    if (!online) {
+      updateSyncStatus('offline');
+    }
   }
-  
+
   buildHostGrid();
   updateStats();
   updateHistorySelect();
-  
-  console.log('🚀 系统已启动，Token:', GITHUB_TOKEN.substring(0, 8) + '...');
-  console.log('Gist ID:', GIST_ID);
+}
+
+function init() {
+  GITHUB_TOKEN = getToken();
+  if (GITHUB_TOKEN) {
+    updateSyncStatus('online');
+    initApp();
+  } else {
+    updateSyncStatus('offline');
+    const now = new Date();
+    currentDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    document.getElementById('dpick').value = currentDate;
+    const [y,m,d] = currentDate.split('-');
+    document.getElementById('d-disp').textContent = `${m}/${d}`;
+    buildHostGrid();
+    updateStats();
+    toast('💡 请点击"导入Token"按钮');
+  }
 }
 
 init();
