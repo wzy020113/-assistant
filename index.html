@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>死亡搁浅2 · 主机质检</title>
+  <title>死亡搁浅2 · 质检</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;500&display=swap');
@@ -370,6 +370,9 @@
   <button class="btn btn-primary" onclick="saveAndSync()">
     <i class="ti ti-cloud-up"></i>保存
   </button>
+  <button class="btn btn-secondary" onclick="retrySync()" id="retry-btn" style="display:none;">
+    <i class="ti ti-refresh"></i>重试同步
+  </button>
   <button class="btn btn-secondary" onclick="showTokenInput()">
     <i class="ti ti-key"></i> 导入Token
   </button>
@@ -400,6 +403,9 @@ let HOSTS = [...DEFAULT_HOSTS];
 let records = {};
 let todayStatus = {};
 let currentDate = '';
+let remarkTimer = null;
+let isOnline = true; // 跟踪实际在线状态
+let pendingSave = false; // 是否有待保存的数据
 
 // ==================== Token 管理 ====================
 function getToken() {
@@ -508,12 +514,13 @@ async function uploadToGist(data) {
 
     if (!response.ok) throw new Error('上传失败');
 
+    // 成功时才更新为在线状态
     updateSyncStatus('online');
     document.getElementById('sync-time').textContent = new Date().toLocaleTimeString();
     return true;
   } catch (error) {
     console.error('上传失败:', error);
-    updateSyncStatus('offline');
+    // 失败时不改变在线状态，由调用者决定如何处理
     return false;
   }
 }
@@ -540,27 +547,47 @@ async function immediateSave() {
   if (success) {
     toast('✅ 已保存');
   } else {
-    toast('❌ 保存失败');
+    // 保存失败时不改变在线状态，只显示待同步
+    updateSyncStatus('pending');
+    toast('⚠️ 保存失败，数据已暂存');
   }
 }
 
 function updateSyncStatus(status) {
   const dot = document.getElementById('sync-dot');
   const text = document.getElementById('sync-status');
+  const retryBtn = document.getElementById('retry-btn');
   dot.className = 'dot';
 
   switch(status) {
     case 'online':
+      isOnline = true;
+      pendingSave = false;
       dot.classList.add('online');
       text.textContent = '云端已连接';
+      retryBtn.style.display = 'none';
       break;
     case 'offline':
+      isOnline = false;
       dot.classList.add('offline');
-      text.textContent = '离线模式';
+      text.textContent = pendingSave ? '离线模式 (有未保存更改)' : '离线模式';
+      retryBtn.style.display = pendingSave ? 'block' : 'none';
       break;
     case 'syncing':
       dot.classList.add('online');
       text.textContent = '同步中...';
+      retryBtn.style.display = 'none';
+      break;
+    case 'pending':
+      pendingSave = true;
+      if (isOnline) {
+        dot.classList.add('online');
+        text.textContent = '待同步...';
+      } else {
+        dot.classList.add('offline');
+        text.textContent = '离线模式 (有未保存更改)';
+      }
+      retryBtn.style.display = 'block';
       break;
   }
 }
@@ -630,7 +657,14 @@ async function toggleHost(host, sid) {
 async function updateRemark(host, sid) {
   if(!todayStatus[host]) todayStatus[host] = { checked: false, remark: '' };
   todayStatus[host].remark = document.getElementById('rm-'+sid).value;
-  await immediateSave();
+  
+  // 清除之前的定时器
+  clearTimeout(remarkTimer);
+  
+  // 3秒后再保存（输入停止3秒后），减少频繁API调用
+  remarkTimer = setTimeout(async () => {
+    await immediateSave();
+  }, 3000);
 }
 
 async function deleteHost(event, host) {
@@ -731,8 +765,22 @@ async function saveAndSync() {
   if (!records[currentDate]) records[currentDate] = { hosts: {}, hostOrder: [] };
   records[currentDate].hosts = JSON.parse(JSON.stringify(todayStatus));
   records[currentDate].hostOrder = [...HOSTS];
-  await immediateSave();
-  updateHistorySelect();
+  
+  const success = await immediateSave();
+  if (success) {
+    updateHistorySelect();
+  }
+}
+
+// 手动重试同步
+async function retrySync() {
+  if (!GITHUB_TOKEN) { toast('请先导入Token'); return; }
+  
+  toast('正在重试同步...');
+  const success = await immediateSave();
+  if (success) {
+    updateHistorySelect();
+  }
 }
 
 function toast(msg) {
@@ -749,6 +797,7 @@ window.deleteHost = deleteHost;
 window.addHost = addHost;
 window.switchTab = switchTab;
 window.saveAndSync = saveAndSync;
+window.retrySync = retrySync;
 window.showTokenInput = showTokenInput;
 window.hideTokenInput = hideTokenInput;
 window.saveManualToken = saveManualToken;
