@@ -6,6 +6,7 @@
   <title>死亡搁浅2 · 主机质检 (云存储)</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
   <style>
+    /* ... 所有CSS样式保持不变 ... */
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;500&display=swap');
 
     :root {
@@ -57,6 +58,7 @@
     }
     .config-bar .status-dot.online { background: var(--green); }
     .config-bar .status-dot.offline { background: #e24b4a; }
+    .config-bar .status-dot.syncing { background: var(--accent); animation: pulse 0.8s ease-in-out infinite; }
 
     .hdr {
       padding: 16px 16px 0;
@@ -299,11 +301,10 @@
 </head>
 <body>
 
-<!-- ⚠️ 请在这里填入你的 GitHub Token 和 Gist ID -->
 <div class="config-bar" id="config-bar">
   <span class="status-dot" id="sync-dot"></span>
   <span id="sync-status">初始化中...</span>
-  <span style="margin-left:auto;font-size:10px;">Gist Cloud Sync</span>
+  <span style="margin-left:auto;font-size:10px;" id="sync-time"></span>
 </div>
 
 <div class="hdr">
@@ -383,9 +384,8 @@
 
 <script>
 // ==================== 配置区域 ====================
-// ⚠️ 请替换为你的实际值
-const GITHUB_TOKEN = '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';  // 替换为你的 GitHub Token
-const GIST_ID = '7f5932c27738dfa4d93bee403bc32d09';            // 替换为你的 Gist ID
+const GITHUB_TOKEN = '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';
+const GIST_ID = '7f5932c27738dfa4d93bee403bc32d09';
 // =================================================
 
 const API_URL = `https://api.github.com/gists/${GIST_ID}`;
@@ -395,7 +395,7 @@ let HOSTS = [...DEFAULT_HOSTS];
 let records = {};
 let todayStatus = {};
 let currentDate = '';
-let syncTimer = null;
+let isSaving = false;
 
 // ==================== GitHub API 操作 ====================
 async function fetchFromGist() {
@@ -414,7 +414,6 @@ async function fetchFromGist() {
     const file = gist.files['ds2_qc_data.json'];
     
     if (!file || !file.content) {
-      // 文件不存在，创建默认数据
       await createDefaultGistFile();
       return;
     }
@@ -428,7 +427,6 @@ async function fetchFromGist() {
       records = data.records;
     }
     
-    // 加载今日状态
     if (records[currentDate] && records[currentDate].hosts) {
       todayStatus = JSON.parse(JSON.stringify(records[currentDate].hosts));
     } else {
@@ -439,18 +437,20 @@ async function fetchFromGist() {
     buildHostGrid();
     updateStats();
     updateHistorySelect();
-    toast('云端数据已加载');
+    console.log('✅ 数据已从云端加载');
     return true;
   } catch (error) {
     console.error('同步失败:', error);
     updateSyncStatus('offline');
-    // 如果云端加载失败，尝试从localStorage加载
     loadFromLocalStorage();
     return false;
   }
 }
 
 async function uploadToGist(data) {
+  if (isSaving) return;
+  isSaving = true;
+  
   try {
     updateSyncStatus('syncing');
     const response = await fetch(API_URL, {
@@ -469,20 +469,24 @@ async function uploadToGist(data) {
       })
     });
     
-    if (!response.ok) throw new Error('上传失败');
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('上传失败详情:', errorData);
+      throw new Error('上传失败: ' + response.status);
+    }
     
     updateSyncStatus('online');
-    // 同时保存到localStorage作为备份
     saveToLocalStorage(data);
-    toast('✅ 数据已同步到云端');
+    document.getElementById('sync-time').textContent = new Date().toLocaleTimeString();
+    console.log('✅ 数据已保存到云端');
     return true;
   } catch (error) {
     console.error('上传失败:', error);
     updateSyncStatus('offline');
-    toast('❌ 同步失败，数据已本地保存');
-    // 保存到localStorage
     saveToLocalStorage(data);
     return false;
+  } finally {
+    isSaving = false;
   }
 }
 
@@ -494,22 +498,8 @@ async function createDefaultGistFile() {
   };
   
   try {
-    await fetch(API_URL, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        files: {
-          'ds2_qc_data.json': {
-            content: JSON.stringify(defaultData, null, 2)
-          }
-        }
-      })
-    });
-    toast('已创建云端数据文件');
+    await uploadToGist(defaultData);
+    console.log('已创建云端数据文件');
   } catch (error) {
     console.error('创建默认文件失败:', error);
   }
@@ -549,7 +539,7 @@ function loadFromLocalStorage() {
     buildHostGrid();
     updateStats();
     updateHistorySelect();
-    toast('📱 已加载本地缓存');
+    console.log('📱 已加载本地缓存');
   } catch (e) {
     console.warn('本地加载失败:', e);
   }
@@ -569,19 +559,17 @@ function updateSyncStatus(status) {
       break;
     case 'offline':
       dot.classList.add('offline');
-      text.textContent = '离线模式 (本地存储)';
+      text.textContent = '离线模式';
       break;
     case 'syncing':
-      dot.classList.add('online');
-      dot.style.animation = 'pulse 0.5s ease-in-out infinite';
+      dot.classList.add('syncing');
       text.textContent = '同步中...';
       break;
   }
 }
 
-// ==================== 自动保存 ====================
+// ==================== 获取当前完整数据 ====================
 function getCurrentData() {
-  // 更新records中的当前日期数据
   if (!records[currentDate]) {
     records[currentDate] = { hosts: {}, hostOrder: [] };
   }
@@ -596,39 +584,13 @@ function getCurrentData() {
   };
 }
 
-async function autoSave() {
+// ==================== 立即保存函数 ====================
+async function immediateSave() {
   const data = getCurrentData();
   await uploadToGist(data);
 }
 
-async function saveAndSync() {
-  if (!currentDate) {
-    toast('请先选择日期');
-    return;
-  }
-  
-  const btn = document.getElementById('save-btn');
-  btn.disabled = true;
-  
-  // 确保当前数据已更新到records
-  if (!records[currentDate]) {
-    records[currentDate] = { hosts: {}, hostOrder: [] };
-  }
-  records[currentDate].hosts = JSON.parse(JSON.stringify(todayStatus));
-  records[currentDate].hostOrder = [...HOSTS];
-  
-  const data = getCurrentData();
-  await uploadToGist(data);
-  
-  updateHistorySelect();
-  btn.disabled = false;
-}
-
-async function forceSync() {
-  await fetchFromGist();
-}
-
-// ==================== UI 函数 (保持不变) ====================
+// ==================== UI 函数 ====================
 function safeId(h) { return h.replace(/[^a-zA-Z0-9_-]/g,'_'); }
 
 function buildHostGrid() {
@@ -672,7 +634,7 @@ function updateStats() {
   document.getElementById('s-pct').textContent = (total > 0 ? Math.round(passed/total*100) : 0) + '%';
 }
 
-function toggleHost(host, sid) {
+async function toggleHost(host, sid) {
   if(!todayStatus[host]) todayStatus[host] = { checked: false, remark: '' };
   todayStatus[host].checked = !todayStatus[host].checked;
   
@@ -687,17 +649,19 @@ function toggleHost(host, sid) {
   }
   
   updateStats();
-  // 自动保存到云端
-  debounceAutoSave();
+  // 立即保存到云端
+  await immediateSave();
+  toast('✅ 已保存到云端');
 }
 
-function updateRemark(host, sid) {
+async function updateRemark(host, sid) {
   if(!todayStatus[host]) todayStatus[host] = { checked: false, remark: '' };
   todayStatus[host].remark = document.getElementById('rm-'+sid).value;
-  debounceAutoSave();
+  // 立即保存到云端
+  await immediateSave();
 }
 
-function deleteHost(event, host) {
+async function deleteHost(event, host) {
   event.stopPropagation();
   const idx = HOSTS.indexOf(host);
   if(idx === -1) return;
@@ -707,11 +671,11 @@ function deleteHost(event, host) {
   
   buildHostGrid();
   updateStats();
-  toast(`已移除 ${host}`);
-  debounceAutoSave();
+  await immediateSave();
+  toast(`已移除 ${host} ✅`);
 }
 
-function addHost() {
+async function addHost() {
   const inp = document.getElementById('add-input');
   const val = inp.value.trim().toUpperCase();
   if(!val) { inp.focus(); return; }
@@ -721,14 +685,14 @@ function addHost() {
   inp.value = '';
   buildHostGrid();
   updateStats();
-  toast(`已添加 ${val}`);
+  
+  await immediateSave();
+  toast(`已添加 ${val} ✅`);
   
   setTimeout(() => {
     const card = document.getElementById('card-' + safeId(val));
     if(card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, 100);
-  
-  debounceAutoSave();
 }
 
 function onDateChange() {
@@ -806,12 +770,29 @@ function switchTab(t) {
   if(t==='h') loadHist();
 }
 
-// 防抖自动保存
-function debounceAutoSave() {
-  clearTimeout(window._autoSaveTimer);
-  window._autoSaveTimer = setTimeout(() => {
-    autoSave();
-  }, 2000); // 2秒后自动保存
+async function saveAndSync() {
+  if (!currentDate) {
+    toast('请先选择日期');
+    return;
+  }
+  
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  
+  if (!records[currentDate]) {
+    records[currentDate] = { hosts: {}, hostOrder: [] };
+  }
+  records[currentDate].hosts = JSON.parse(JSON.stringify(todayStatus));
+  records[currentDate].hostOrder = [...HOSTS];
+  
+  await immediateSave();
+  updateHistorySelect();
+  btn.disabled = false;
+}
+
+async function forceSync() {
+  await fetchFromGist();
+  toast('✅ 已从云端同步');
 }
 
 function toast(msg) {
@@ -819,28 +800,6 @@ function toast(msg) {
   el.textContent = msg;
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 3000);
-}
-
-// ==================== 初始化 ====================
-async function init() {
-  // 设置当前日期
-  const now = new Date();
-  currentDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  document.getElementById('dpick').value = currentDate;
-  const [y,m,d] = currentDate.split('-');
-  document.getElementById('d-disp').textContent = `${m}/${d}`;
-  
-  // 尝试从云端加载
-  const online = await fetchFromGist();
-  
-  if (!online) {
-    // 离线时使用本地存储
-    loadFromLocalStorage();
-  }
-  
-  buildHostGrid();
-  updateStats();
-  updateHistorySelect();
 }
 
 // 暴露函数到全局作用域
@@ -851,6 +810,28 @@ window.addHost = addHost;
 window.switchTab = switchTab;
 window.saveAndSync = saveAndSync;
 window.forceSync = forceSync;
+
+// ==================== 初始化 ====================
+async function init() {
+  const now = new Date();
+  currentDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  document.getElementById('dpick').value = currentDate;
+  const [y,m,d] = currentDate.split('-');
+  document.getElementById('d-disp').textContent = `${m}/${d}`;
+  
+  const online = await fetchFromGist();
+  
+  if (!online) {
+    loadFromLocalStorage();
+  }
+  
+  buildHostGrid();
+  updateStats();
+  updateHistorySelect();
+  
+  console.log('🚀 系统已启动，Token:', GITHUB_TOKEN.substring(0, 8) + '...');
+  console.log('Gist ID:', GIST_ID);
+}
 
 init();
 </script>
