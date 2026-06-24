@@ -305,6 +305,14 @@
       padding: 12px 20px; background: var(--surface2);
       color: var(--text2); border: 0.5px solid var(--border2);
     }
+
+    /* 时钟样式 */
+    #sync-time {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent-text);
+      letter-spacing: 0.5px;
+    }
   </style>
 </head>
 <body>
@@ -312,7 +320,7 @@
 <div class="status-bar">
   <span class="dot" id="sync-dot"></span>
   <span id="sync-status" style="font-size:11px;">未连接</span>
-  <span style="margin-left:auto;font-size:10px;" id="sync-time"></span>
+  <span style="margin-left:auto;" id="sync-time">--:--:--</span>
 </div>
 
 <div class="hdr">
@@ -404,8 +412,25 @@ let records = {};
 let todayStatus = {};
 let currentDate = '';
 let remarkTimer = null;
-let isOnline = true; // 跟踪实际在线状态
-let pendingSave = false; // 是否有待保存的数据
+let isOnline = true;
+let pendingSave = false;
+let clockInterval = null; // 时钟定时器
+
+// ==================== 实时时钟 ====================
+function updateClock() {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+  document.getElementById('sync-time').textContent = timeStr;
+}
+
+function startClock() {
+  // 先清除旧的定时器，防止重复
+  if (clockInterval) clearInterval(clockInterval);
+  // 立即更新一次
+  updateClock();
+  // 每秒更新
+  clockInterval = setInterval(updateClock, 1000);
+}
 
 // ==================== Token 管理 ====================
 function getToken() {
@@ -416,7 +441,6 @@ function saveToken(token) {
   localStorage.setItem('ds2_github_token', token);
   GITHUB_TOKEN = token;
   updateSyncStatus('online');
-  document.getElementById('sync-time').textContent = new Date().toLocaleTimeString();
   hideTokenInput();
   toast('✅ Token已保存！正在同步...');
   initApp();
@@ -480,7 +504,6 @@ async function fetchFromGist() {
     }
 
     updateSyncStatus('online');
-    document.getElementById('sync-time').textContent = new Date().toLocaleTimeString();
     return true;
   } catch (error) {
     console.error('加载失败:', error);
@@ -514,13 +537,10 @@ async function uploadToGist(data) {
 
     if (!response.ok) throw new Error('上传失败');
 
-    // 成功时才更新为在线状态
     updateSyncStatus('online');
-    document.getElementById('sync-time').textContent = new Date().toLocaleTimeString();
     return true;
   } catch (error) {
     console.error('上传失败:', error);
-    // 失败时不改变在线状态，由调用者决定如何处理
     return false;
   }
 }
@@ -547,7 +567,6 @@ async function immediateSave() {
   if (success) {
     toast('✅ 已保存');
   } else {
-    // 保存失败时不改变在线状态，只显示待同步
     updateSyncStatus('pending');
     toast('⚠️ 保存失败，数据已暂存');
   }
@@ -658,10 +677,8 @@ async function updateRemark(host, sid) {
   if(!todayStatus[host]) todayStatus[host] = { checked: false, remark: '' };
   todayStatus[host].remark = document.getElementById('rm-'+sid).value;
   
-  // 清除之前的定时器
   clearTimeout(remarkTimer);
   
-  // 3秒后再保存（输入停止3秒后），减少频繁API调用
   remarkTimer = setTimeout(async () => {
     await immediateSave();
   }, 3000);
@@ -772,7 +789,6 @@ async function saveAndSync() {
   }
 }
 
-// 手动重试同步
 async function retrySync() {
   if (!GITHUB_TOKEN) { toast('请先导入Token'); return; }
   
@@ -823,6 +839,9 @@ async function initApp() {
 }
 
 function init() {
+  // 启动实时时钟
+  startClock();
+  
   GITHUB_TOKEN = getToken();
   if (GITHUB_TOKEN) {
     updateSyncStatus('online');
